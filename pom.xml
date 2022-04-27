@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.redhat.consulting</groupId>
+  <artifactId>threescale-okta-rest-adapter</artifactId>
+  <version>1.0-SNAPSHOT</version>
+
+  <name>3scale Zync REST Adapter for Okta</name>
+  <description><![CDATA[
+    REST adapter to facilitate using Okta as the identity provider authorizing
+    requests to APIs managed by 3scale
+  ]]></description>
+
+  <properties>
+    <!-- Java Properties -->
+    <java.version>1.8</java.version>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+
+    <!-- Project Encoding properties -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- Maven plugin versions -->
+    <version.openapi-generator-maven-plugin>5.4.0</version.openapi-generator-maven-plugin>
+    <version.maven-compiler-plugin>3.8.1</version.maven-compiler-plugin>
+    <version.maven-failsafe-plugin>3.0.0-M5</version.maven-failsafe-plugin>
+    <version.maven-surefire-plugin>3.0.0-M5</version.maven-surefire-plugin>
+
+    <!-- Framework versions -->
+    <version.red-hat-fuse>7.10.0.fuse-sb2-7_10_2-00001-redhat-00002</version.red-hat-fuse>
+    <version.red-hat-fuse-camel>2.23.2.fuse-7_10_2-00001-redhat-00005</version.red-hat-fuse-camel>
+
+    <!-- Other dependency versions -->
+    <version.commons-lang>3.12.0</version.commons-lang>
+    <version.okta-sdk>8.2.0</version.okta-sdk>
+    <version.okta-spring>2.1.5</version.okta-spring>
+    <version.mapstruct>1.4.2.Final</version.mapstruct>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Dependency version imports -->
+      <dependency>
+        <groupId>org.jboss.redhat-fuse</groupId>
+        <artifactId>fuse-springboot-bom</artifactId>
+        <version>${version.red-hat-fuse}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- TODO: Activate Spring Boot Starter to secure the operations
+    <dependency>
+      <groupId>com.okta.spring</groupId>
+      <artifactId>okta-spring-boot-starter</artifactId>
+      <version>${version.okta-spring}</version>
+    </dependency>
+    -->
+    <dependency>
+      <groupId>com.okta.spring</groupId>
+      <artifactId>okta-spring-sdk</artifactId>
+      <version>${version.okta-spring}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.okta.sdk</groupId>
+      <artifactId>okta-sdk-api</artifactId>
+      <version>${version.okta-sdk}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.okta.sdk</groupId>
+      <artifactId>okta-sdk-impl</artifactId>
+      <version>${version.okta-sdk}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jackson-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-servlet-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-http4-starter</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-tomcat</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-undertow</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${version.commons-lang}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.mapstruct</groupId>
+      <artifactId>mapstruct</artifactId>
+      <version>${version.mapstruct}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-restdsl-swagger-plugin</artifactId>
+        <version>${version.red-hat-fuse-camel}</version>
+        <executions>
+          <execution>
+            <id>default-generate-xml</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>generate-xml</goal>
+            </goals>
+            <configuration>
+              <specificationUri>${project.basedir}/src/main/resources/swagger/zync-rest-adapter.yaml</specificationUri>
+
+              <outputDirectory>${project.build.outputDirectory}/camel-rest/</outputDirectory>
+              <fileName>zync-rest-adapter.xml</fileName>
+
+              <restConfiguration>false</restConfiguration>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${version.maven-compiler-plugin}</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.mapstruct</groupId>
+              <artifactId>mapstruct-processor</artifactId>
+              <version>${version.mapstruct}</version>
+            </path>
+          </annotationProcessorPaths>
+          <showWarnings>true</showWarnings>
+          <compilerArgs>
+            <!-- <compilerArg>-Amapstruct.verbose=true</compilerArg> -->
+            <compilerArg>-Amapstruct.unmappedSourcePolicy=ERROR</compilerArg>
+            <compilerArg>-Amapstruct.unmappedTargetPolicy=ERROR</compilerArg>
+            <compilerArg>-Amapstruct.defaultComponentModel=spring</compilerArg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <!-- Use Red Hat build of Spring Boot plugin according to Fuse version -->
+        <groupId>org.jboss.redhat-fuse</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${version.red-hat-fuse}</version>
+      </plugin>
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>${version.openapi-generator-maven-plugin}</version>
+        <executions>
+          <execution>
+            <id>default-generate</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+            <configuration>
+              <inputSpec>${project.basedir}/src/main/resources/swagger/zync-rest-adapter.yaml</inputSpec>
+              <output>${project.build.directory}/generated-sources/zync-adapter-models</output>
+              <skipValidateSpec>false</skipValidateSpec>
+
+              <generatorName>spring</generatorName>
+
+              <!-- Generate only models; no test stubs or docs -->
+              <generateApis>false</generateApis>
+              <generateApiTests>false</generateApiTests>
+              <generateApiDocumentation>false</generateApiDocumentation>
+              <generateModels>true</generateModels>
+              <generateModelTests>false</generateModelTests>
+              <generateModelDocumentation>false</generateModelDocumentation>
+
+              <generateSupportingFiles>true</generateSupportingFiles>
+              <supportingFilesToGenerate>
+                .openapi-generator-ignore,VERSION,FILES
+              </supportingFilesToGenerate>
+
+              <!-- Configuration specific to the Spring generator -->
+              <configOptions>
+                <!-- Library options (Java 8 Date/Times, etc) -->
+                <library>spring-boot</library>
+                <dateLibrary>java8</dateLibrary>
+                <annotationLibrary>none</annotationLibrary>
+                <documentationProvider>none</documentationProvider>
+
+                <!-- Configure packages -->
+                <invokerPackage>com.redhat.consulting.zyncadapter.rest</invokerPackage>
+                <apiPackage>com.redhat.consulting.zyncadapter.rest.api</apiPackage>
+                <modelPackage>com.redhat.consulting.zyncadapter.rest.model</modelPackage>
+
+                <!-- Don't validate data (these are useful when using Spring MVC...) -->
+                <useBeanValidation>false</useBeanValidation>
+                <performBeanValidation>false</performBeanValidation>
+
+                <!-- Other options -->
+                <hateoas>false</hateoas>
+                <serializableModel>true</serializableModel>
+                <withXml>false</withXml>
+                <openApiNullable>false</openApiNullable>
+                <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                <disallowAdditionalPropertiesIfNotPresent>false</disallowAdditionalPropertiesIfNotPresent>
+                <sortModelPropertiesByRequiredFlag>false</sortModelPropertiesByRequiredFlag>
+              </configOptions>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

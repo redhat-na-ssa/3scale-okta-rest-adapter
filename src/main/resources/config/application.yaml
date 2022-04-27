@@ -1,0 +1,44 @@
+camel:
+  springboot:
+    name: Zync REST Adapter
+  component:
+    servlet:
+      mapping:
+        context-path: /*
+
+management:
+  server:
+    port: 8081
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include:
+          - info
+          - health
+          - camelroutes
+          - camelroutecontroller
+  endpoint:
+    info:
+      enabled: true
+    health:
+      enabled: true
+    camelroutes:
+      enabled: true
+      read-only: true
+    camelroutecontroller:
+      enabled: true
+
+okta:
+  oauth2:
+    issuer: https://dev-39092990.okta.com/oauth2/default
+  client:
+    org-url: https://dev-39092990.okta.com
+    token: 00eG0riLX8uEa5fsVNJKoNK8nHG_k5AjAOGavzwzyk
+
+server:
+  port: 8080
+
+spring:
+  main:
+    banner-mode: "off"

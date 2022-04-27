@@ -1,0 +1,17 @@
+<routes xmlns="http://camel.apache.org/schema/spring"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.w3.org/2001/XMLSchema-instance http://www.w3.org/2001/XMLSchema-instance
+          http://camel.apache.org/schema/spring https://camel.apache.org/schema/spring/camel-spring-2.25.4.xsd">
+  <route id="okta-openid-configuration" group="okta-integration">
+    <from uri="direct:read-openid-configuration"/>
+    <removeHeaders pattern="*"/>
+    <setHeader headerName="CamelHttpMethod">
+      <constant>GET</constant>
+    </setHeader>
+    <setHeader headerName="CamelHttpUri">
+      <simple>{{okta.client.org-url}}/.well-known/openid-configuration</simple>
+    </setHeader>
+    <to uri="http4://set-in-header"/>
+  </route>
+</routes>

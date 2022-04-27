@@ -1,0 +1,111 @@
+<routes xmlns="http://camel.apache.org/schema/spring"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          http://www.w3.org/2001/XMLSchema-instance http://www.w3.org/2001/XMLSchema-instance
+          http://camel.apache.org/schema/spring https://camel.apache.org/schema/spring/camel-spring-2.25.4.xsd">
+  <route id="okta-create-or-update-client" group="okta-integration">
+    <from uri="direct:create-or-update-client"/>
+    <unmarshal>
+      <json library="Jackson" unmarshalTypeName="com.redhat.consulting.zyncadapter.rest.model.ClientUpdatePayload"/>
+    </unmarshal>
+
+    <choice>
+      <when>
+        <simple>${body.getClientId()} != ${headers.client_id}</simple>
+        <removeHeaders pattern="*"/>
+        <setHeader headerName="CamelHttpResponseCode">
+          <constant>400</constant>
+        </setHeader>
+        <setHeader headerName="Content-Type">
+          <constant>application/json</constant>
+        </setHeader>
+        <setBody>
+          <constant><![CDATA[{"success":false,"message":"client ID mismatch"}]]></constant>
+        </setBody>
+        <stop/>
+      </when>
+    </choice>
+
+    <setProperty propertyName="clientUpdateRequest">
+      <simple>${body}</simple>
+    </setProperty>
+
+    <setBody>
+      <method ref="oktaClientSupport" method="lookupClient(${body.getClientId()})"/>
+    </setBody>
+
+    <choice>
+      <when>
+        <simple>${body} == null</simple>
+        <setBody>
+          <method ref="oktaClientObjectFactory" method="createApplication()"/>
+        </setBody>
+        <setProperty propertyName="isNewApplication">
+          <constant>true</constant>
+        </setProperty>
+      </when>
+      <otherwise>
+        <setProperty propertyName="isNewApplication">
+          <constant>false</constant>
+        </setProperty>
+      </otherwise>
+    </choice>
+
+    <bean ref="applicationMapperImpl" method="updateApplication(${body}, ${exchangeProperty.clientUpdateRequest})"/>
+
+    <choice>
+      <when>
+        <simple>${exchangeProperty.isNewApplication} == true</simple>
+        <bean ref="oktaSdkClient" method="createApplication(${body})"/>
+        <setBody>
+          <constant><![CDATA[{"success":true,"message":"client created"}]]></constant>
+        </setBody>
+      </when>
+      <otherwise>
+        <transform>
+          <simple>${body.update()}</simple>
+        </transform>
+        <setBody>
+          <constant><![CDATA[{"success":true,"message":"client updated"}]]></constant>
+        </setBody>
+      </otherwise>
+    </choice>
+
+    <removeHeaders pattern="*"/>
+    <setHeader headerName="Content-Type">
+      <constant>application/json</constant>
+    </setHeader>
+  </route>
+
+
+  <route id="okta-delete-client" group="okta-integration">
+    <from uri="direct:delete-client"/>
+
+    <setBody>
+      <method ref="oktaClientSupport" method="lookupClient(${headers.client_id})"/>
+    </setBody>
+
+    <choice>
+      <when>
+        <simple>${body} == null</simple>
+        <removeHeaders pattern="*"/>
+        <setHeader headerName="CamelHttpResponseCode">
+          <constant>404</constant>
+        </setHeader>
+      </when>
+      <otherwise>
+        <setProperty propertyName="dummy">
+          <simple>${body.deactivate()}</simple>
+        </setProperty>
+        <transform>
+          <simple>${body.delete()}</simple>
+        </transform>
+      </otherwise>
+    </choice>
+
+    <setBody>
+      <constant/>
+    </setBody>
+  </route>
+
+</routes>
