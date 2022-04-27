@@ -182,6 +182,15 @@
         <groupId>org.jboss.redhat-fuse</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>${version.red-hat-fuse}</version>
+        <executions>
+          <execution>
+            <id>default-repackage</id>
+            <phase>package</phase>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.openapitools</groupId>
@@ -223,9 +232,9 @@
                 <documentationProvider>none</documentationProvider>
 
                 <!-- Configure packages -->
-                <invokerPackage>com.redhat.consulting.zyncadapter.rest</invokerPackage>
-                <apiPackage>com.redhat.consulting.zyncadapter.rest.api</apiPackage>
-                <modelPackage>com.redhat.consulting.zyncadapter.rest.model</modelPackage>
+                <invokerPackage>com.redhat.threescale.zyncadapter.rest</invokerPackage>
+                <apiPackage>com.redhat.threescale.zyncadapter.rest.api</apiPackage>
+                <modelPackage>com.redhat.threescale.zyncadapter.rest.model</modelPackage>
 
                 <!-- Don't validate data (these are useful when using Spring MVC...) -->
                 <useBeanValidation>false</useBeanValidation>
@@ -246,5 +255,39 @@
       </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>redhat-ga-repository</id>
+      <name>Red Hat General Availability repository (all)</name>
+      <url>https://maven.repository.redhat.com/ga/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>redhat-ga-repository</id>
+      <name>Red Hat General Availability repository (all)</name>
+      <url>https://maven.repository.redhat.com/ga/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
 </project>

@@ -2,8 +2,8 @@ package com.redhat.consulting.zyncadapter.mappers;
 
 import com.okta.sdk.resource.application.OpenIdConnectApplication;
 import com.okta.sdk.resource.application.OpenIdConnectApplicationType;
-import com.redhat.consulting.zyncadapter.rest.model.ClientUpdatePayload;
-import com.redhat.consulting.zyncadapter.rest.model.GrantTypeEnum;
+import com.redhat.threescale.zyncadapter.rest.model.ClientUpdatePayload;
+import com.redhat.threescale.zyncadapter.rest.model.GrantTypeEnum;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

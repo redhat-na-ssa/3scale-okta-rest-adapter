@@ -1,0 +1,27 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: 3scale-okta-rest-adapter
+  labels:
+    app: 3scale-okta-rest-adapter
+    application: 3scale-okta-rest-adapter
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 3scale-okta-rest-adapter:latest
+  resources:
+    limits:
+      memory: 1G
+    requests:
+      memory: 1G
+  source:
+    type: Binary
+    binary: { }
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: fuse7-java-openshift:1.6
+        namespace: openshift

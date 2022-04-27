@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: threescale-okta-rest-adapter
+  labels:
+    app: 3scale-okta-rest-adapter
+    application: 3scale-okta-rest-adapter
+spec:
+  selector:
+    app: 3scale-okta-rest-adapter
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8080

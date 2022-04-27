@@ -1,0 +1,88 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: 3scale-okta-rest-adapter
+  labels:
+    app: 3scale-okta-rest-adapter
+    application: 3scale-okta-rest-adapter
+spec:
+  replicas: 1
+  selector:
+    application: 3scale-okta-rest-adapter
+    deploymentconfig: 3scale-okta-rest-adapter
+  template:
+    metadata:
+      name: 3scale-okta-rest-adapter
+      labels:
+        app: 3scale-okta-rest-adapter
+        application: 3scale-okta-rest-adapter
+        deploymentconfig: 3scale-okta-rest-adapter
+    spec:
+      containers:
+        - name: zync-rest-adapter
+          image: ""
+          env:
+            - name: okta.oauth2.issuer
+              valueFrom:
+                secretKeyRef:
+                  name: okta-credentials
+                  key: issuer
+            - name: okta.client.org-url
+              valueFrom:
+                secretKeyRef:
+                  name: okta-credentials
+                  key: org-url
+            - name: okta.client.token
+              valueFrom:
+                secretKeyRef:
+                  name: okta-credentials
+                  key: access-token
+          ports:
+            - name: rest
+              containerPort: 8080
+              protocol: TCP
+            - name: actuator
+              containerPort: 8081
+              protocol: TCP
+            - name: jolokia
+              containerPort: 8778
+              protocol: TCP
+            - name: prometheus
+              containerPort: 9779
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              port: 8081
+              path: /actuator/health
+            initialDelaySeconds: 60
+            timeoutSeconds: 2
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              port: 8080
+              path: /.well-known/openid-configuration
+            initialDelaySeconds: 60
+            timeoutSeconds: 2
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+  triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: false
+        containerNames:
+          - zync-rest-adapter
+        from:
+          kind: ImageStreamTag
+          name: 3scale-okta-rest-adapter:latest

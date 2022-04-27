@@ -1,0 +1,7 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: 3scale-okta-rest-adapter
+  labels:
+    app: 3scale-okta-rest-adapter
+    application: 3scale-okta-rest-adapter

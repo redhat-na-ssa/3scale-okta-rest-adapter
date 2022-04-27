@@ -6,7 +6,7 @@
   <route id="okta-create-or-update-client" group="okta-integration">
     <from uri="direct:create-or-update-client"/>
     <unmarshal>
-      <json library="Jackson" unmarshalTypeName="com.redhat.consulting.zyncadapter.rest.model.ClientUpdatePayload"/>
+      <json library="Jackson" unmarshalTypeName="com.redhat.threescale.zyncadapter.rest.model.ClientUpdatePayload"/>
     </unmarshal>
 
     <choice>
