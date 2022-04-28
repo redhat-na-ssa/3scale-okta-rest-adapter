@@ -34,7 +34,7 @@ oc rollout status dc/3scale-okta-rest-adapter -n YOURNAMESPACE --watch
 Configure API Product to use OIDC with REST identity provider and URL of:
 
 ```
-http://<ZYNC-CLIENT-ID>:<ZYNC-SECRET>@threescale-okta-rest-adapter.<YOURNAMESPACE>/
+http://<ZYNC-CLIENT-ID>:<ZYNC-SECRET>@threescale-okta-rest-adapter.<YOURNAMESPACE>.svc/
 ```
 
 ## Implementation Notes
@@ -43,7 +43,7 @@ http://<ZYNC-CLIENT-ID>:<ZYNC-SECRET>@threescale-okta-rest-adapter.<YOURNAMESPAC
 
 Okta maintains OAuth/OIDC clients as part of the Okta "Application" list.
 Because of this, applications created by this integration app may need to have
-users or groups assigned to them before they can be usable.
+users or groups assigned to them before they can be used to create tokens.
 
 ### Grant Type Restrictions
 
@@ -81,3 +81,10 @@ production use. This is useful for individual deployments.
 
 When using the SDK in clustered deployment configurations, Okta recommends
 changing the SDK's cache to use a proper clustered cache mechanism.
+
+## Other Notes
+
+A free developer account for Okta can be created at
+https://developer.okta.com/signup/
+
+This is useful for developing enhancements to this integration app
