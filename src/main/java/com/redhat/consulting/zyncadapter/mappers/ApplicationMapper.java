@@ -13,6 +13,7 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR,
@@ -54,16 +55,24 @@ public interface ApplicationMapper {
     default OpenIdConnectApplicationType mapApplicationType(List<GrantTypeEnum> input) {
         EnumSet<GrantTypeEnum> grantTypes = EnumSet.copyOf(input);
 
-        if (grantTypes.contains(GrantTypeEnum.CLIENT_CREDENTIALS)) {
-            // Okta only allows client credentials for SERVICE app types
-            return OpenIdConnectApplicationType.SERVICE;
-        } else if (grantTypes.contains(GrantTypeEnum.PASSWORD)) {
-            // Okta only allows password grant type for NATIVE app types
+        if (grantTypes.contains(GrantTypeEnum.PASSWORD)
+            && !grantTypes.contains(GrantTypeEnum.CLIENT_CREDENTIALS)) {
+            // Native is the only app type that is listed as allowing password,
+            // but Okta explicitly disallows client_credentials for it.
+            // Also note, Okta docs display that NATIVE requires
+            // authorization_code, but that's not actually the case
             return OpenIdConnectApplicationType.NATIVE;
         }
 
-        // Otherwise, WEB is the most lenient app type
-        return OpenIdConnectApplicationType.WEB;
+        if (grantTypes.contains(GrantTypeEnum.AUTHORIZATION_CODE)) {
+            // WEB allows everything except password. Even though the docs
+            // don't list client_credentials, it is allowed and even has UI
+            // to select it on their web interface
+            return OpenIdConnectApplicationType.WEB;
+        }
+
+        // Similarly, SERVICE allows password and implicit grants...
+        return OpenIdConnectApplicationType.SERVICE;
     }
 
     default List<OAuthResponseType> mapResponseType(List<GrantTypeEnum> input) {
@@ -71,6 +80,7 @@ public interface ApplicationMapper {
             .map(Mappers
                 .getMapper(GrantTypeToResponseTypeMapper.class)
                 ::mapGrantToResponse)
+            .filter(Objects::nonNull)
             .distinct()
             .collect(Collectors.toList());
     }

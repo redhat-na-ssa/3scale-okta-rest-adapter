@@ -52,6 +52,7 @@
     </choice>
 
     <bean ref="applicationMapperImpl" method="updateApplication(${body}, ${exchangeProperty.clientUpdateRequest})"/>
+    <bean ref="oktaClientSupport" method="preUpdateClient(${body})"/>
 
     <choice>
       <when>
@@ -67,7 +68,7 @@
       </otherwise>
     </choice>
 
-    <bean ref="oktaClientSupport" method="finalizeClient(${body})"/>
+    <bean ref="oktaClientSupport" method="postUpdateClient(${body})"/>
 
     <choice>
       <when>

@@ -10,8 +10,8 @@ public interface GrantTypeToResponseTypeMapper {
 
     @ValueMapping(target = "CODE", source = "AUTHORIZATION_CODE")
     @ValueMapping(target = "TOKEN", source = "IMPLICIT")
-    @ValueMapping(target = "TOKEN", source = "CLIENT_CREDENTIALS")
-    @ValueMapping(target = "TOKEN", source = "PASSWORD")
+    @ValueMapping(target = "<NULL>", source = "CLIENT_CREDENTIALS")
+    @ValueMapping(target = "<NULL>", source = "PASSWORD")
     OAuthResponseType mapGrantToResponse(GrantTypeEnum input);
 
 }

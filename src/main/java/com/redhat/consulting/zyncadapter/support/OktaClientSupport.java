@@ -48,6 +48,13 @@ public class OktaClientSupport {
         this.scopeGrantMapper = scopeGrantMapper;
     }
 
+    /**
+     * Look up an application based upon its client ID
+     *
+     * @param clientId the client ID of the application
+     * @return the {@link Application} object, or null if a corresponding
+     * application couldn't be found
+     */
     public Application lookupClient(String clientId) {
         // This sucks. Why doesn't Okta let us filter server-side by client ID?
         return oktaClient.listApplications().stream()
@@ -69,10 +76,32 @@ public class OktaClientSupport {
             .orElse(null);
     }
 
-    public void finalizeClient(OpenIdConnectApplication application) {
+    /**
+     * Method to adjust and finalize the application prior to sending the
+     * changes to Okta.
+     * <p>
+     * This is to be used for fixes to the application to avoid hitting
+     * Okta validation errors
+     *
+     * @param application the application prior to calling
+     *                    {@link OpenIdConnectApplication#update()} or
+     *                    {@link Client#createApplication(Application)}
+     */
+    public void preUpdateClient(OpenIdConnectApplication application) {
+        // Nothing needed at the moment
+    }
 
+    /**
+     * Method to operate on an application after it has been updated with Okta.
+     * <p>
+     * This is to be used for adding configuration relationships following
+     * the application being created in Okta.
+     *
+     * @param application the application that has been saved with Okta
+     */
+    public void postUpdateClient(OpenIdConnectApplication application) {
+        // Try to add scopes, even though Okta's API for scopes is not great
         grantScopes(application, DEFAULT_SCOPES);
-
     }
 
     private void grantScopes(OpenIdConnectApplication application, Collection<String> scopes) {
