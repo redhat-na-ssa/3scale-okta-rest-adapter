@@ -1,26 +1,34 @@
 package com.redhat.consulting.zyncadapter.mappers;
 
+import com.okta.sdk.resource.application.OAuthResponseType;
 import com.okta.sdk.resource.application.OpenIdConnectApplication;
 import com.okta.sdk.resource.application.OpenIdConnectApplicationType;
 import com.redhat.threescale.zyncadapter.rest.model.ClientUpdatePayload;
 import com.redhat.threescale.zyncadapter.rest.model.GrantTypeEnum;
+import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.factory.Mappers;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Mapper(uses = {
-    OktaClientObjectFactory.class
-})
+@Mapper(injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+    uses = {
+        OktaClientObjectFactory.class
+    })
 public interface ApplicationMapper {
 
     @Mapping(target = "label", source = "clientName")
     @Mapping(target = "credentials.OAuthClient.clientId", source = "clientId")
     @Mapping(target = "credentials.OAuthClient.clientSecret", source = "clientSecret")
+    @Mapping(target = "credentials.OAuthClient.tokenEndpointAuthMethod", constant = "CLIENT_SECRET_BASIC")
+    @Mapping(target = "credentials.OAuthClient.autoKeyRotation", constant = "false")
     @Mapping(target = "settings.OAuthClient.applicationType", source = "grantTypes")
     @Mapping(target = "settings.OAuthClient.grantTypes", source = "grantTypes")
+    @Mapping(target = "settings.OAuthClient.responseTypes", source = "grantTypes")
     @Mapping(target = "settings.OAuthClient.redirectUris", source = "redirectUris")
     @Mapping(target = "accessibility", ignore = true)
     @Mapping(target = "embedded", ignore = true)
@@ -56,6 +64,15 @@ public interface ApplicationMapper {
 
         // Otherwise, WEB is the most lenient app type
         return OpenIdConnectApplicationType.WEB;
+    }
+
+    default List<OAuthResponseType> mapResponseType(List<GrantTypeEnum> input) {
+        return input.stream()
+            .map(Mappers
+                .getMapper(GrantTypeToResponseTypeMapper.class)
+                ::mapGrantToResponse)
+            .distinct()
+            .collect(Collectors.toList());
     }
 
 }

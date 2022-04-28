@@ -3,6 +3,7 @@
         xsi:schemaLocation="
           http://www.w3.org/2001/XMLSchema-instance http://www.w3.org/2001/XMLSchema-instance
           http://camel.apache.org/schema/spring https://camel.apache.org/schema/spring/camel-spring-2.25.4.xsd">
+
   <route id="okta-openid-configuration" group="okta-integration">
     <from uri="direct:read-openid-configuration"/>
     <removeHeaders pattern="*"/>
@@ -10,8 +11,14 @@
       <constant>GET</constant>
     </setHeader>
     <setHeader headerName="CamelHttpUri">
-      <simple>{{okta.client.org-url}}/.well-known/openid-configuration</simple>
+      <!--
+        Okta's convention is to have a set of well-known discoverable
+        under each issuer. The well-known at top-level (okta.client.org-url) is
+        for configuration used when interacting with the Okta management APIs
+      -->
+      <simple>{{okta.oauth2.issuer}}/.well-known/openid-configuration</simple>
     </setHeader>
+    <log message="Retrieving .well-known OpenIDConnect Configuration..."/>
     <to uri="http4://set-in-header"/>
   </route>
 </routes>

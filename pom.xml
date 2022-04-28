@@ -35,6 +35,7 @@
     <version.red-hat-fuse-camel>2.23.2.fuse-7_10_2-00001-redhat-00005</version.red-hat-fuse-camel>
 
     <!-- Other dependency versions -->
+    <version.commons-collections>4.4</version.commons-collections>
     <version.commons-lang>3.12.0</version.commons-lang>
     <version.okta-sdk>8.2.0</version.okta-sdk>
     <version.okta-spring>2.1.5</version.okta-spring>
@@ -122,6 +123,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>${version.commons-lang}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
+      <version>${version.commons-collections}</version>
     </dependency>
     <dependency>
       <groupId>org.mapstruct</groupId>

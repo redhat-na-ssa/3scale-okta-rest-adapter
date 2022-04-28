@@ -56,15 +56,29 @@
     <choice>
       <when>
         <simple>${exchangeProperty.isNewApplication} == true</simple>
-        <bean ref="oktaSdkClient" method="createApplication(${body})"/>
         <setBody>
-          <constant><![CDATA[{"success":true,"message":"client created"}]]></constant>
+          <method ref="oktaSdkClient" method="createApplication(${body})"/>
         </setBody>
       </when>
       <otherwise>
         <transform>
           <simple>${body.update()}</simple>
         </transform>
+      </otherwise>
+    </choice>
+
+    <bean ref="oktaClientSupport" method="finalizeClient(${body})"/>
+
+    <choice>
+      <when>
+        <simple>${exchangeProperty.isNewApplication} == true</simple>
+        <log message="Created client ID ${headers.client_id}"/>
+        <setBody>
+          <constant><![CDATA[{"success":true,"message":"client created"}]]></constant>
+        </setBody>
+      </when>
+      <otherwise>
+        <log message="Updated client ID ${headers.client_id}"/>
         <setBody>
           <constant><![CDATA[{"success":true,"message":"client updated"}]]></constant>
         </setBody>
@@ -88,12 +102,14 @@
     <choice>
       <when>
         <simple>${body} == null</simple>
+        <log message="Attempted to delete non-existent client ID ${headers.client_id}"/>
         <removeHeaders pattern="*"/>
         <setHeader headerName="CamelHttpResponseCode">
           <constant>404</constant>
         </setHeader>
       </when>
       <otherwise>
+        <log message="Deleting client ID ${headers.client_id}"/>
         <setProperty propertyName="dummy">
           <simple>${body.deactivate()}</simple>
         </setProperty>
