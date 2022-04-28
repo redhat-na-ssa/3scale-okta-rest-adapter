@@ -37,7 +37,7 @@ Configure API Product to use OIDC with REST identity provider and URL of:
 http://<ZYNC-CLIENT-ID>:<ZYNC-SECRET>@threescale-okta-rest-adapter.<YOURNAMESPACE>.svc/
 ```
 
-Where <ZYNC-CLIENT-ID> and <ZYNC-SECRET> are the client ID and client secret
+Where `<ZYNC-CLIENT-ID>` and `<ZYNC-SECRET>` are the client ID and client secret
 for a client that has already been defined in the Okta environment.
 
 ## Implementation Notes
