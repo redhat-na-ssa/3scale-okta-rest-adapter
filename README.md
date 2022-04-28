@@ -37,6 +37,9 @@ Configure API Product to use OIDC with REST identity provider and URL of:
 http://<ZYNC-CLIENT-ID>:<ZYNC-SECRET>@threescale-okta-rest-adapter.<YOURNAMESPACE>.svc/
 ```
 
+Where <ZYNC-CLIENT-ID> and <ZYNC-SECRET> are the client ID and client secret
+for a client that has already been defined in the Okta environment.
+
 ## Implementation Notes
 
 ### OAuth Clients are Okta Applications
@@ -57,18 +60,19 @@ requested by 3scale.
 Okta's management API is very unclear on scope grants to applications. On
 the one hand, it seems like the intent is for generalized scopes to be
 configured at the Authorization Server level, but on the other, almost all the
-default scopes specific to managing aspects of Okta configuration.
+default scopes are specific to managing aspects of Okta configuration.
 
 In addition, the API for interacting with scopes seems very immature. For
-example, to grant a scope to an application, the request must include both
+example: to grant a scope to an application, the request must include both
 `issuer` and `scopeId` -- however these are misleading labels. The `issuer` is
-not the Authorization Server's issuer value; instead it is the general
-organization URL for the whole Okta environment. Similarly, the `scopeId` value
-is actually the scope name.
+not the Authorization Server's issuer value; instead, it is the general
+organization URL for the whole Okta environment. Similarly, the key `scopeId`
+is actually to be set with a value of the scope name and not the scope's ID.
 
 Beyond the misleading labeling, Okta rejects scope grants with very little
-detail for the reason: it states only "scopeId is invalid". This makes setting
-scopes for Service app types (`client_credentials`) almost impossible.
+detail for the reason: it states only `scopeId: 'scopeId' is invalid`. This
+makes setting scopes for Service app types (`client_credentials`) almost
+impossible.
 
 Instead of setting scopes programmatically, it is easier to just define a scope
 on the Okta Authorization Server and set it as a "default" scope. Then clients
@@ -77,7 +81,7 @@ will be able to generate tokens.
 ### Caching
 
 The Okta Java SDK automatically comes with in-memory caching configured for
-production use. This is useful for individual deployments.
+production use. This is useful for individual deployments of apps like this.
 
 When using the SDK in clustered deployment configurations, Okta recommends
 changing the SDK's cache to use a proper clustered cache mechanism.
