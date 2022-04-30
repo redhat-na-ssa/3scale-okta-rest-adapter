@@ -71,11 +71,10 @@ spec:
             successThreshold: 1
             failureThreshold: 3
           resources:
-            limits:
-              cpu: 250m
-              memory: 512Mi
             requests:
               cpu: 250m
+              memory: 512Mi
+            limits:
               memory: 512Mi
   triggers:
     - type: ImageChange
