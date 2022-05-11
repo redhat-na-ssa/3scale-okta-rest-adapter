@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk8:x86_64-ubi-jdk8u292-b10-slim
+FROM registry.redhat.io/fuse7/fuse-java-openshift-rhel8:1.10-25
 WORKDIR /opt
 ENV PORT 8080
 EXPOSE 8080
