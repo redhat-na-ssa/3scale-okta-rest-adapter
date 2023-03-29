@@ -1,0 +1,257 @@
+:scrollbar:
+:data-uri:
+:toc2:
+:linkattrs:
+
+
+= 3scale to Okta REST Adapter
+
+:numbered:
+
+This project demonstrates a RESTful integration adapter between Red Hat 3scale and Okta.
+More specifically, it facilitates the synchonrization of 3scale _applications_ and Okta SSO _applications_.
+
+
+*DISCLAIMER:*  This project is provided for demonstration purposes only.  If/when technical or architectural assistance is needed, please contact your Red Hat sales representative to collaboate with Red Hat Consulting to develop and maintain a custom integration between 3scale and Okta for your organization.
+
+== Background
+
+3scale API Manager provides the ability to link:https://access.redhat.com/documentation/en-us/red_hat_3scale_api_management/2.13/html-single/administering_the_api_gateway/index#integrating-threescale-with-an-openid-connect-identity-provider[Integrate with an OpenID Connect Identity Provider].
+
+Red Hat SSO is that recommended Identity Provider.
+
+Some customers of 3scale, however, may prefer to use other identity providers, such as Okta.
+Integration between 3scale and Okta is possible however it requires tedious manual synchronization between the two systems when 3scale API _applications_ change (ie: create, update, delete) over time.
+This project demonstrates an automated synchronization between 3scale and Okta.
+
+In this project, you will build and deploy an integration app that runs in your OpenShift cluster (co-located with your 3scale API Manager).  This integration app is implemented using Red Hat Fuse embedded in a SpringBoot based linux container.  All interaction between 3scale -> Integration App -> Okta is via REST.
+
+
+== Pre-reqs:
+
+. *OpenShift cluster* ( >= v 4.10 )
+
+. link:https://mirror.openshift.com/pub/openshift-v4/clients/ocp/?C=M;O=D[oc utility]
++
+Needs to correspond to the version of your OpenShift cluster. 
++
+You should be authenticated into your OpenShift cluster at the command line as either _cluster-admin_ or an admin user of your namespace.
+
+. *3scale API Manager* ( >= v 2.11 )
++
+3scale operator along with _apimanager_ and _tenant_ resources should be installed on your OpenShift cluster.  You should be authenticated into 3scale as the administrator of your tenant.
+
+. *Okta Developer Account*
+
+.. Sign up for one at https://developer.okta.com/signup/.
+.. From the _admin_ page of your Okta account, make note of your Okta _subdomain_ found at the top right corner.
++
+Your subdomain will be of the format:   _okta-dev-XXXXXXXX_ .
+
+.. Set the following environment variable in your shell:
++
+-----
+export OKTA_SUBDOMAIN=<change_me>
+-----
+
+. *JDK / Maven*
++
+This project requires JDK 11 (or more recent) with the _javac_ compiler.
++
+In addition, maven 3.6.3 (or more recent) is also needed.
+
+== Okta Token
+You will need an Okta token with sufficient privileges to create SSO _applications_ in Okta.
+
+. Follow the instructions found link:https://developer.okta.com/docs/guides/create-an-api-token/main/#oauth-2-0-instead-of-api-tokens[here] to create this token.
+
+. Make note of the _Token Value_ as found in the pop-up:
++
+image::docs/images/okta_token.png[]
+
+. Set the following environment variable in your shell:
++
+-----
+export OKTA_ACCOUNT_TOKEN=<change_me>
+-----
+
+
+== Set up
+One-time configuration for initial installation
+
+=== Adapter Install
+
+
+==== Clone project
+
+Clone this project to your local development environment where the `oc` utility is installed and authenticated into your OpenShift cluster.
+
+==== 3scale / Okta Adapter Namespace
+
+Create a namespace in your OpenShift project where you intend to run this 3scale / Okta integration adapter.
+
+Set the following environment variable:
+
+-----
+export OKTA_INTEGRATION_NS=<change_me>
+-----
+
+==== OpenShift Resources
+
+
+.  Okta Credentials Secret:
++
+From the root of this project, execute the following:
++
+-----
+echo "apiVersion: v1
+kind: Secret
+metadata:
+  name: okta-credentials
+  labels:
+    app: 3scale-okta-rest-adapter
+    application: 3scale-okta-rest-adapter
+type: Opaque
+stringData:
+  issuer: https://$OKTA_SUBDOMAIN.okta.com/oauth2/default
+  org-url: https://$OKTA_SUBDOMAIN.okta.com
+  access-token: $OKTA_ACCOUNT_TOKEN" \
+  | oc apply -n $OKTA_INTEGRATION_NS -f -
+-----
+
+. Other OpenShift resources:
++
+Execute the following:
++
+```bash
+oc apply -f .openshift/01-imagestream.yaml -n $OKTA_INTEGRATION_NS
+oc apply -f .openshift/02-buildconfig.yaml -n $OKTA_INTEGRATION_NS
+oc apply -f .openshift/04-deploymentconfig.yaml -n $OKTA_INTEGRATION_NS
+oc apply -f .openshift/05-service.yaml -n $OKTA_INTEGRATION_NS
+```
+
+==== Compile
+
+```bash
+./mvnw clean verify
+```
+
+==== Deploy
+
+```bash
+oc start-build 3scale-okta-rest-adapter --from-file=target/threescale-okta-rest-adapter-1.0-SNAPSHOT.jar --follow -n $OKTA_INTEGRATION_NS
+oc rollout latest dc/3scale-okta-rest-adapter -n $OKTA_INTEGRATION_NS
+oc rollout status dc/3scale-okta-rest-adapter -n $OKTA_INTEGRATION_NS --watch
+```
+
+=== Okta Application
+
+In Okta, create a new `API Services` application and retain the client ID and client secret for use
+later when configuring 3scale to use this integration adapter.
+
+. From your Okta admin page, navigate to: `Applications -> Applications -> Create App Integration`.
+. In the pop-up, select _API Services_ and click `Next`:
++
+image::docs/images/okta_api_services.png[]
+
+. In the next form, provide a name of:  _zync_integration_
+. Make note of both the `Client ID` as well as the `Client Secret`
++
+image::docs/images/okta_client_details.png[]
+
+. Set the following variables in your shell:
++
+-----
+export ZYNC_CLIENT_ID=<change_me>
+export ZYNC_CLIENT_SECRET=<change_me>
+-----
+
+== 3scale Configs
+
+Configure an API product in 3scale with the following _Authentication_ settings:
+
+. **Authentication**: OpenID Connect Use OpenID Connect for any OAuth 2.0 flow.
+. **OpenID Connect Issuer Type**: `REST API`
+
+. *OpenID Connect Issuer*:
++
+Populate with the output of the following:
++
+-----
+echo -en "\nhttp://$ZYNC_CLIENT_ID:$ZYNC_CLIENT_SECRET@threescale-okta-rest-adapter.$OKTA_INTEGRATION_NS.svc/\n"
+-----
+
+. **ClientID Token Claim Type**: `plain`
+. **ClientID Token Claim**: `cid`
+
+
+image::docs/images/3scale_auth_1.png[]
+
+image::docs/images/3scale_auth_2.png[]
+
+
+== Usage
+
+Synchronization between 3scale and Okta is uni-directional:  all state changes are initiated in 3scale and synchronized with Okta.  The reverse is not possible.
+
+Once your API product has been configured, create a 3scale _application_ that references that _product_.
+
+If all is set-up correctly, a corresponding SSO _application_ with the same name will have been created in Okta.
+
+* Okta app
++
+image::docs/images/okta_3scale_int_1.png[]
+
+* 3scale app
++
+image::docs/images/okta_3scale_int_2.png[]
+
+You will also have the ability to update that _application_ from 3scale.
+
+== Implementation Notes
+
+=== OAuth Clients are Okta Applications
+
+Okta maintains OAuth/OIDC clients as part of the Okta "Application" list.
+Because of this, applications created by this integration app may need to have
+users or groups assigned to them before they can be used to create tokens.
+
+=== Grant Type Restrictions
+
+By default, Okta imposes a strict limitation on the grant types allowed for
+each "application type". This 3scale-Okta integration tool attempts to automatically select
+the Okta application type (web, native, service) depending upon the grant types
+requested by 3scale.
+
+The logic that selects the Okta app type is found in link:src/main/java/com/redhat/consulting/zyncadapter/mappers/ApplicationMapper.java[ApplicationMapper.java]
+
+=== Scope Grants
+
+Okta's management API is very unclear on scope grants to applications. On
+the one hand, it seems like the intent is for generalized scopes to be
+configured at the Authorization Server level, but on the other, almost all the
+default scopes are specific to managing aspects of Okta configuration.
+
+In addition, the API for interacting with scopes seems very immature. For
+example: to grant a scope to an application, the request must include both
+`issuer` and `scopeId` -- however these are misleading labels. The `issuer` is
+not the Authorization Server's issuer value; instead, it is the general
+organization URL for the whole Okta environment. Similarly, the key `scopeId`
+is actually to be set with a value of the scope name and not the scope's ID.
+
+Beyond the misleading labeling, Okta rejects scope grants with very little
+detail for the reason: it states only `scopeId: 'scopeId' is invalid`. This
+makes setting scopes for Service app types (`client_credentials`) almost
+impossible.
+
+Instead of setting scopes programmatically, it is easier to just define a scope
+on the Okta Authorization Server and set it as a "default" scope. Then clients
+will be able to generate tokens.
+
+=== Caching
+
+The Okta Java SDK automatically comes with in-memory caching configured for
+production use. This is useful for individual deployments of apps like this.
+
+When using the SDK in clustered deployment configurations, Okta recommends
+changing the SDK's cache to use a proper clustered cache mechanism.
